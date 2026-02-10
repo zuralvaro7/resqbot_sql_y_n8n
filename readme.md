@@ -1,4 +1,4 @@
 # ResQBot
-En este repositorio se subira un archivo donde se pondra el codigo del sql para la base de datos.
+En este repositorio se subirá un archivo donde se pondrá el código del SQL para la base de datos.
 
-En este repositorio se subira un archivo donde estaran todos los flunos de n8n para el bot de telegram, Whatsapp y la aplicacion cliente.
+En este repositorio se subirá un archivo donde estarán todos los flujos de n8n para el Bot de Telegram, WhatsApp y la aplicación cliente.
