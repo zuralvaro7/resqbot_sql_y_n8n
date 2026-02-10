@@ -1,0 +1,49 @@
+CREATE TABLE paciente (
+    npac INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apell VARCHAR(150) NOT NULL,
+    telef VARCHAR(20),
+    email VARCHAR(150),
+    direcc VARCHAR(255),
+    pcont VARCHAR(150),
+    tcont VARCHAR(20),
+    econt VARCHAR(150),
+    dcont VARCHAR(255)
+);
+
+CREATE TABLE conversa (
+    nchat INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    npac INT NOT NULL,
+    msg_ent TEXT NOT NULL,
+    ts_ent TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ts_sal TIMESTAMP,
+    alerta BOOLEAN DEFAULT FALSE,
+    priori INT,
+
+    CONSTRAINT fk_conv_pac
+        FOREIGN KEY (npac) 
+        REFERENCES paciente(npac)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE alertas (
+    idalert INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    npac INT NOT NULL,
+    nchat INT NOT NULL,
+    msg_ent TEXT NOT NULL,
+    motivo VARCHAR(255) NOT NULL,
+
+    CONSTRAINT fk_al_pac
+        FOREIGN KEY (npac)
+        REFERENCES paciente(npac)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_al_chat
+        FOREIGN KEY (nchat)
+        REFERENCES conversa(nchat)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX idx_conv_npac ON conversa(npac);
+CREATE INDEX idx_al_npac ON alertas(npac);
+CREATE INDEX idx_al_nchat ON alertas(nchat);
