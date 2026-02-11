@@ -5,7 +5,7 @@ CREATE TABLE paciente (
     telefono VARCHAR(20),
     email VARCHAR(150),
     direccion VARCHAR(255),
-    nomconta VARCHAR(150),
+    persconta VARCHAR(150),
     telconta VARCHAR(20),
     emailconta VARCHAR(150),
     dirconta VARCHAR(255)
