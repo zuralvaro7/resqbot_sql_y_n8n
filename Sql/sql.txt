@@ -1,62 +1,63 @@
 CREATE TABLE paciente (
-    npac INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    numpaci INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    apell VARCHAR(150) NOT NULL,
-    telef VARCHAR(20),
+    apellid VARCHAR(150) NOT NULL,
+    telefono VARCHAR(20),
     email VARCHAR(150),
-    direcc VARCHAR(255),
-    pcont VARCHAR(150),
-    tcont VARCHAR(20),
-    econt VARCHAR(150),
-    dcont VARCHAR(255)
+    direccion VARCHAR(255),
+    nomconta VARCHAR(150),
+    telconta VARCHAR(20),
+    emailconta VARCHAR(150),
+    dirconta VARCHAR(255)
 );
 
-CREATE TABLE conversa (
-    nchat INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    npac INT NOT NULL,
-    msg_ent TEXT NOT NULL,
-    ts_ent TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ts_sal TIMESTAMP,
+CREATE TABLE conversacion (
+    numchat INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    numpaci INT NOT NULL,
+    msgent TEXT NOT NULL,
+    tsent TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tssal TIMESTAMP WITH TIME ZONE,
     alerta BOOLEAN DEFAULT FALSE,
-    priori INT,
+    priorid INT,
 
     CONSTRAINT fk_conv_pac
-        FOREIGN KEY (npac) 
-        REFERENCES paciente(npac)
+        FOREIGN KEY (numpaci)
+        REFERENCES paciente(numpaci)
         ON DELETE CASCADE
 );
 
-CREATE TABLE alertas (
+CREATE TABLE alerta (
     idalert INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    npac INT NOT NULL,
-    nchat INT NOT NULL,
-    msg_ent TEXT NOT NULL,
+    numpaci INT NOT NULL,
+    numchat INT NOT NULL,
+    msgent TEXT NOT NULL,
     motivo VARCHAR(255) NOT NULL,
 
-    CONSTRAINT fk_al_pac
-        FOREIGN KEY (npac)
-        REFERENCES paciente(npac)
+    CONSTRAINT fk_alert_pac
+        FOREIGN KEY (numpaci)
+        REFERENCES paciente(numpaci)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_al_chat
-        FOREIGN KEY (nchat)
-        REFERENCES conversa(nchat)
+    CONSTRAINT fk_alert_chat
+        FOREIGN KEY (numchat)
+        REFERENCES conversacion(numchat)
         ON DELETE CASCADE
 );
 
 CREATE TABLE usuario (
     iduser INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    npac INT NOT NULL,
-    usuario VARCHAR(100) NOT NULL,
-    contrasena VARCHAR(255) NOT NULL,
+    numpaci INT NOT NULL,
+    usuario VARCHAR(100) NOT NULL UNIQUE,
+    passhash VARCHAR(255) NOT NULL,
     rol VARCHAR(50) NOT NULL,
 
     CONSTRAINT fk_user_pac
-        FOREIGN KEY (npac)
-        REFERENCES paciente(npac)
+        FOREIGN KEY (numpaci)
+        REFERENCES paciente(numpaci)
         ON DELETE CASCADE
 );
 
-CREATE INDEX idx_conv_npac ON conversa(npac);
-CREATE INDEX idx_al_npac ON alertas(npac);
-CREATE INDEX idx_al_nchat ON alertas(nchat);
+CREATE INDEX idx_conv_numpaci ON conversacion(numpaci);
+CREATE INDEX idx_alert_numpaci ON alerta(numpaci);
+CREATE INDEX idx_alert_chat ON alerta(numchat);
+CREATE INDEX idx_user_numpaci ON usuario(numpaci);
