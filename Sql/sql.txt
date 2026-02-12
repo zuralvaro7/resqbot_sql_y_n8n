@@ -19,6 +19,8 @@ CREATE TABLE conversacion (
     tssal TIMESTAMP WITH TIME ZONE,
     alerta BOOLEAN DEFAULT FALSE,
     priorid INT,
+    imagen BYTEA,
+    audio BYTEA,
 
     CONSTRAINT fk_conv_pac
         FOREIGN KEY (numpaci)
