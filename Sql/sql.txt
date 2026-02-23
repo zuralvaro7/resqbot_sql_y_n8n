@@ -21,6 +21,7 @@ CREATE TABLE conversacion (
     priorid INT,
     imagen BYTEA,
     audio BYTEA,
+    respuesta TEXT,
 
     CONSTRAINT fk_conv_pac
         FOREIGN KEY (numpaci)
