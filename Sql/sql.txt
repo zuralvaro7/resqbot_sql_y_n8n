@@ -49,7 +49,7 @@ CREATE TABLE alerta (
 
 CREATE TABLE usuario (
     iduser INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    numpaci INT NOT NULL,
+    numpaci INT,
     usuario VARCHAR(100) NOT NULL UNIQUE,
     passhash VARCHAR(255) NOT NULL,
     rol VARCHAR(50) NOT NULL,
