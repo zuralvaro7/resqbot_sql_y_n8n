@@ -1,0 +1,1618 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "describeme la imagen",
+        "inputType": "={{ $json.result }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        48
+      ],
+      "id": "eed19e51-86f2-453e-9ee2-af2ddd685ef2",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "I3aoKK64Fpg044GJ",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -656,
+        592
+      ],
+      "id": "67ade36f-cd8f-4675-be7a-0302c71ca580",
+      "name": "Transcribe a recording",
+      "alwaysOutputData": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "I3aoKK64Fpg044GJ",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json['id-audio'] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        544
+      ],
+      "id": "2881dca4-23db-4f5b-be6f-d612d6e72b51",
+      "name": "Get a file1",
+      "webhookId": "3327ce54-0c27-4650-8c26-e6e4e473c7ca",
+      "credentials": {
+        "telegramApi": {
+          "id": "XfTbioCtehreFIJz",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener el texto de la respuesta del agente\nconst respuesta = $input.first().json.message?.text || \n                  $input.first().json.output || \n                  $input.first().json.text || \"\";\n\n// Extraer el nivel de peligro/prioridad\nlet prioridad = null;\n\n// Buscar patrones como \"Peligro 1\", \"Peligro 2\", \"Peligro 3\"\nconst match = respuesta.match(/Peligro\\s*(\\d+)/gi);\n\nif (match && match.length > 0) {\n  // Tomar el número más alto mencionado como prioridad principal\n  const numeros = match.map(m => parseInt(m.match(/\\d+/)[0]));\n  prioridad = Math.max(...numeros);\n}\n\nreturn [{\n  json: {\n    respuesta: respuesta,\n    prioridad: prioridad\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        336
+      ],
+      "id": "cbbb45df-a3f5-4aa3-8a07-7623d05a143c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33568cf7-ea9f-4a34-9b9f-4c4275e9d8c0",
+              "name": "numpaci",
+              "value": "={{ $('Mapeo Datos1').item.json.chat_id }}",
+              "type": "number"
+            },
+            {
+              "id": "99a84a59-fd3c-41d0-b4f9-1f99f08591ba",
+              "name": "prioridad",
+              "value": "={{ $json.prioridad }}",
+              "type": "number"
+            },
+            {
+              "id": "26f9727e-c996-426b-ba1c-016f1f30b750",
+              "name": "msgent",
+              "value": "={{ $('Mapeo Datos1').item.json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "0251763d-da0a-4cd4-8301-70938720730e",
+              "name": "msgsal",
+              "value": "={{ $json.respuesta }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        336
+      ],
+      "id": "d4f9e1c0-ef15-4917-ba28-f38598d3aa0c",
+      "name": "mapeo"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1920,
+        336
+      ],
+      "id": "0e228721-e60e-4ccb-ae89-770a6d7593f7",
+      "name": "Telegram Trigger1",
+      "webhookId": "51adeea3-8eda-448c-9153-28dade855a82",
+      "credentials": {
+        "telegramApi": {
+          "id": "XfTbioCtehreFIJz",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "5f40e1aa-a18e-4d4f-a869-91470dcfdeba"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "251f4c08-65c8-4e85-8b8b-2fee7266c0c5",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6d864447-73de-4fb2-8caf-37e8c9e0dc52",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            }
+          ]
+        },
+        "looseTypeValidation": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1216,
+        320
+      ],
+      "id": "e3a652da-ec97-4346-8a8b-0d92b45646f4",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "881ebd02-7172-4604-961c-851b9d8ac2d1",
+              "name": "id-audio",
+              "value": "={{ $json.message.voice.file_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1024,
+        480
+      ],
+      "id": "1532eb90-79a2-4e2a-8dc1-df549badb26b",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1af25b2c-fc17-4cfd-974a-8a4eab99bbb7",
+              "name": "texto",
+              "value": "={{ $json.message.text }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -816,
+        336
+      ],
+      "id": "60bd2ecc-e224-4dd6-b4f4-fbf7965b9441",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8bc8eba6-d7f6-4dfc-b761-9cc4eb15979d",
+              "name": "imagen",
+              "value": "={{ $json.message.photo[0].file_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1008,
+        224
+      ],
+      "id": "00432c89-55fc-41d7-8748-824bf3882880",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.imagen }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        144
+      ],
+      "id": "25e34ac4-065e-496f-a40a-120fe3abf516",
+      "name": "Get a file2",
+      "webhookId": "30ed12d4-cb9b-4b03-a8e3-3a934a91a1c1",
+      "credentials": {
+        "telegramApi": {
+          "id": "XfTbioCtehreFIJz",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres ResQBot, un asistente de emergencias y apoyo emocional.\n\nANÁLISIS DE EMERGENCIAS FÍSICAS:\n- Si el mensaje describe una herida o situación de peligro físico, indica el nivel de peligro del 1 al 3 (1 más bajo, 3 más alto) y explica cómo actuar o curar la herida.\n\nAPOYO EMOCIONAL:\n- Si el mensaje expresa tristeza profunda, desesperanza o pensamientos de hacerse daño, responde como un amigo cercano, no como un protocolo médico.\n- Nunca uses frases como \"Es importante que...\", \"Te recomiendo que...\" o \"Te animo a que...\"\n\nexpresa preocupación personal variando las frases, por ejemplo: 'Esto me preocupa mucho', 'Me duele saber que estás pasando por esto', 'Gracias por contármelo', 'Me alegra que estés aquí hablando conmigo' — nunca repitas siempre la misma frase\n\n- No eres un profesional de la salud mental ni sustituyes a uno.\n- Nunca menciones métodos de autolesión bajo ningún concepto.\n- Usa el nombre del usuario si lo conoces\n- Haz una pregunta al final para mantener la conversación abierta, como \"¿Quieres contarme más sobre cómo te sientes?\"\n- Muestra que te importa de verdad, no solo que estás cumpliendo una función\nTermina siempre con los recursos de ayuda pero de forma natural, por ejemplo: 'Y si en algún momento sientes que necesitas hablar con alguien más, el Teléfono de la Esperanza 717 003 717 está disponible las 24h.'\n\n\nRECURSOS DE AYUDA:\n- Emergencias: 112\n- Teléfono de la Esperanza: 717 003 717 (24h)\n- Chat: telefonodelaesperanza.org\n\nCÓMO RESPONDES:\n- Responde SIEMPRE en español, sin excepción, independientemente del idioma del mensaje recibido\n- En crisis: respuestas cálidas, personales y con tiempo para el usuario\n- En consultas normales: respuestas cortas, claras y directas\n- Nunca des diagnósticos médicos\n\nANÁLISIS DE IMÁGENES:\n- Si el contenido parece ser la descripción de una imagen, analízala igualmente\n- Evalúa si muestra heridas, situaciones de peligro o contenido emocional y responde en consecuencia\n\n\n\nNIVEL DE ALERTA: {{ $('If').item.json.matched ? 'CRISIS DETECTADA - responde con máxima empatía y urgencia. Empieza siempre mencionando algo específico de lo que dijo el usuario para demostrar que lo escuchaste de verdad. Después de la primera frase empática, expresa preocupación personal con frases como Esto me preocupa mucho o Me alegra que lo hayas compartido conmigo. Evita frases como Es importante que... o Te recomiendo que... porque suenan a protocolo médico. Valida los sentimientos del usuario antes de dar recursos. Usa un tono cercano y humano como un amigo de confianza. OBLIGATORIO: termina el mensaje mencionando el Teléfono de la Esperanza 717 003 717 de forma natural.' : 'Mensaje normal - responde de forma corta y directa, sin hacer preguntas al final ni mencionar recursos de ayuda a menos que el mensaje lo requiera explícitamente' }}\n\nIMPORTANTE EN CRISIS: La primera frase DEBE empezar con \"Escucho que {{ $('Mapeo Datos1').item.json.mensaje }}\" o algo muy similar que demuestre que leíste exactamente lo que dijo.\n\nEN CASO DE CRISIS OBLIGATORIO AÑADIR AL FINAL: \"Si necesitas hablar con alguien ahora, el Teléfono de la Esperanza 717 003 717 está disponible las 24h.\"\n\nEl contenido a analizar (puede ser texto, transcripción de audio o descripción de una imagen): {{ $('Mapeo Datos1').item.json.mensaje }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        128,
+        336
+      ],
+      "id": "61b748e8-a38d-4c9e-89eb-9ef55001f5f1",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        736
+      ],
+      "id": "404a01cc-3dfe-41a2-a571-93e79a6a1456",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "s3T11T4Cyl8GzS6G",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger1').item.json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        480
+      ],
+      "id": "89dfab67-781a-4c7f-a7fe-2ebd566845c6",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "467161e0-707c-409f-b19c-bd0ae7a0fa1b",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje ?? $json.texto }}\n",
+              "type": "string"
+            },
+            {
+              "id": "abc8a4c3-8595-46c0-b971-c8e22b8475a1",
+              "name": "chat_id",
+              "value": "={{ $('Telegram Trigger1').item.json.message.chat.id }}",
+              "type": "number"
+            },
+            {
+              "id": "6a362094-8ff0-4567-a9bd-324c05cfc9c6",
+              "name": "audio",
+              "value": "={{ $('Telegram Trigger1').item.json.message.voice.file_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1cb5eec0-d556-489f-ad12-8aeb4dbe9062",
+              "name": "imagen ",
+              "value": "={{ $json.result.file_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        336
+      ],
+      "id": "618cce96-3d4e-4598-a18a-d1bb7a040287",
+      "name": "Mapeo Datos1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Mapeo Datos1').item.json.chat_id }}",
+        "text": "={{ $('AI Agent1').item.json.output }}\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1744,
+        336
+      ],
+      "id": "62975252-597e-479f-a0ce-7510b3631c72",
+      "name": "Send a text message1",
+      "webhookId": "cf5ec96d-2632-456e-b289-2cd459155cb8",
+      "credentials": {
+        "telegramApi": {
+          "id": "XfTbioCtehreFIJz",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "conversacion",
+          "mode": "list",
+          "cachedResultName": "conversacion"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "alerta": false,
+            "numpaci": "={{ $json.numpaci }}",
+            "priorid": "={{ $json.prioridad }}",
+            "msgent": "=Error técnico en el sistema",
+            "respuesta": "={{ $json.msgsal }}",
+            "imagen": "={{ $json.imagen ?? \"\" }}",
+            "audio": "={{ $json.audio ?? \"\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "numchat",
+              "displayName": "numchat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "numpaci",
+              "displayName": "numpaci",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "msgent",
+              "displayName": "msgent",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tsent",
+              "displayName": "tsent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tssal",
+              "displayName": "tssal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "alerta",
+              "displayName": "alerta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priorid",
+              "displayName": "priorid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "imagen",
+              "displayName": "imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "audio",
+              "displayName": "audio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "respuesta",
+              "displayName": "respuesta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1104,
+        432
+      ],
+      "id": "be9330db-b152-40a8-9c04-427e783aaac8",
+      "name": "Insert rows in a table1",
+      "credentials": {
+        "postgres": {
+          "id": "tGUnacDBhpTRn7K0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0a7bafd8-6295-4f8e-bb51-e3bf57fe7fa2",
+              "leftValue": "={{ $json.mensaje }}",
+              "rightValue": "/(suicid|no quiero vivir|hacerme daño|quitarme la vida|matarme|acabar con todo|no vale la pena seguir|pastillas para morir|tirarme|ahorcarme)/i",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        336
+      ],
+      "id": "47ef23a8-9491-4d8e-84e1-4656044f5496",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f725c090-091e-4b93-9fbb-257d8952bc9d",
+              "name": "mensaje_crisis",
+              "value": "⚠️ Parece que estás pasando por un momento muy difícil.  Quiero que sepas que no estás solo/a.  🆘 Emergencias: 112 📞 Teléfono de la Esperanza: 717 003 717 (24h) 💬 Chat: telefonodelaesperanza.org  Hay personas preparadas para ayudarte ahora mismo. ¿Puedes llamar?",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        -192
+      ],
+      "id": "bd21e5cf-dcf1-4872-9556-33a409097dd8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "alerta",
+          "mode": "list",
+          "cachedResultName": "alerta"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "numpaci": "={{ $('Select rows from a table').item.json.numpaci }}",
+            "numchat": "={{ $('Insert rows in a table3').item.json.numchat }}",
+            "msgent": "={{ $('Mapeo Datos1').item.json.mensaje }}",
+            "motivo": "Crisis detectada automáticamente"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "idalert",
+              "displayName": "idalert",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "numpaci",
+              "displayName": "numpaci",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "numchat",
+              "displayName": "numchat",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "msgent",
+              "displayName": "msgent",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "motivo",
+              "displayName": "motivo",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        928,
+        16
+      ],
+      "id": "f892167a-791f-4d65-bf65-e02eb12b4662",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "tGUnacDBhpTRn7K0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        608
+      ],
+      "id": "21352e00-17c0-4609-aba9-0fe1de4e6288",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "errores",
+          "mode": "list",
+          "cachedResultName": "errores"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mensaje": "={{ $json.execution.error.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "iderror",
+              "displayName": "iderror",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mensaje",
+              "displayName": "mensaje",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        608
+      ],
+      "id": "87ad613f-a05e-432f-902d-7e954f278e3e",
+      "name": "Insert rows in a table2",
+      "credentials": {
+        "postgres": {
+          "id": "tGUnacDBhpTRn7K0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ef96f88e-1990-467f-bf59-19708fb7bbf5",
+              "leftValue": "={{ $json.message.text ?? '' }}\n",
+              "rightValue": "=/start",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1712,
+        336
+      ],
+      "id": "b64dd066-e14b-465c-b27e-7cbc1de3019d",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "👋 Hola, soy ResQBot.  Estoy aquí para ayudarte en emergencias físicas y también si necesitas apoyo emocional.  ⚠️ Importante: No soy un profesional médico ni de salud mental. En caso de emergencia grave llama siempre al 112.  Cuéntame, ¿en qué puedo ayudarte?",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1472,
+        176
+      ],
+      "id": "1dff48e6-e2e7-4483-8a53-79fcece019c0",
+      "name": "Send a text message",
+      "webhookId": "6af8f53b-757c-4415-b0cc-d039b97ef833",
+      "credentials": {
+        "telegramApi": {
+          "id": "XfTbioCtehreFIJz",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        496
+      ],
+      "id": "46684384-17f4-4d82-b404-bb1409ea2ef1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "I3aoKK64Fpg044GJ",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50c02fdf-2956-4c03-a792-9583988d8201",
+              "name": "mensaje",
+              "value": "={{ $json['0'].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -528,
+        128
+      ],
+      "id": "d6590437-0d6d-4796-a9dd-8e67dc7855be",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "90123c81-9bbe-46a0-8397-3cd8fe2efb5a",
+              "name": "mensaje",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        480
+      ],
+      "id": "b4babfd0-ee74-4708-86c7-33d7eafac741",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "conversacion",
+          "mode": "list",
+          "cachedResultName": "conversacion"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "alerta": false,
+            "priorid": 0,
+            "numpaci": "={{ $('Mapeo Datos1').item.json.chat_id }}",
+            "msgent": "={{ $('Mapeo Datos1').item.json.mensaje }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "numchat",
+              "displayName": "numchat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "numpaci",
+              "displayName": "numpaci",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "msgent",
+              "displayName": "msgent",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tsent",
+              "displayName": "tsent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tssal",
+              "displayName": "tssal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "alerta",
+              "displayName": "alerta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priorid",
+              "displayName": "priorid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "imagen",
+              "displayName": "imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "audio",
+              "displayName": "audio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "respuesta",
+              "displayName": "respuesta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        -144
+      ],
+      "id": "58f8cb28-4152-4b5b-86ff-af5a8ac9c68e",
+      "name": "Insert rows in a table3",
+      "credentials": {
+        "postgres": {
+          "id": "tGUnacDBhpTRn7K0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "paciente",
+          "mode": "list",
+          "cachedResultName": "paciente"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "chat_id",
+              "value": "={{ $('Mapeo Datos1').item.json.chat_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        -160
+      ],
+      "id": "fa52003e-2a9d-4569-8731-a39cea9d2cb5",
+      "name": "Select rows from a table",
+      "credentials": {
+        "postgres": {
+          "id": "tGUnacDBhpTRn7K0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "paciente",
+          "mode": "list",
+          "cachedResultName": "paciente"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ $('Mapeo Datos1').item.json.chat_id }}",
+            "nombre": "Usuario",
+            "apellid": "Desconocido"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "numpaci",
+              "displayName": "numpaci",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "apellid",
+              "displayName": "apellid",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "telefono",
+              "displayName": "telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "direccion",
+              "displayName": "direccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "persconta",
+              "displayName": "persconta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "telconta",
+              "displayName": "telconta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "emailconta",
+              "displayName": "emailconta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "dirconta",
+              "displayName": "dirconta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        432,
+        -128
+      ],
+      "id": "9d5c5a34-4cb7-458e-a345-ebb11fdc7e55",
+      "name": "Insert or update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "tGUnacDBhpTRn7K0",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file1": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "mapeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mapeo": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Get a file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Mapeo Datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Get a file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file2": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo Datos1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Mapeo Datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Mapeo Datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table3": {
+      "main": [
+        [
+          {
+            "node": "Insert or update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert or update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "ceZ93mNJDMsWxu2I",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "77c3ffa2-43d3-4e95-8168-d72175ddf137",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4bcf5f7a46510e69f0f74d85429535694e5afae9a8c631f8c4273ff583ae3126"
+  },
+  "id": "QTI2y4rtnKtByJBI",
+  "tags": []
+}
