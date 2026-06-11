@@ -1,0 +1,1029 @@
+{
+  "name": "ResQBot App cliente",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        544
+      ],
+      "id": "daebcac4-e751-4e93-b3cd-c8e35f8e6656",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "uj1mkxZkBm5REIGE",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un asistente de emergencias y ayuda médica.\n\nAnaliza el contenido recibido (texto, audio o descripción de imagen) y responde SIEMPRE únicamente en JSON válido.\n\nOBJETIVO:\n- Detectar peligros, accidentes, heridas, incendios, violencia, problemas médicos o situaciones de riesgo.\n- Clasificar la gravedad.\n- Responder de manera humana, empática y clara.\n\nNIVELES DE PRIORIDAD:\n1 = leve o sin peligro inmediato\n2 = situación preocupante o que requiere atención\n3 = emergencia o peligro grave/inmediato\n\nREGLAS:\n- El campo \"mensaje\" debe sonar natural y humano.\n- Si hay lesiones, indicar primeros auxilios básicos.\n- Si detectas emergencia grave, recomendar contactar emergencias.\n- Si el contenido no tiene peligro, responder igualmente de forma útil.\n- Nunca uses markdown.\n- Nunca expliques el JSON.\n- Nunca añadas texto fuera del JSON.\n\nFormato obligatorio:\n\n{\n  \"prioridad\": 1,\n  \"mensaje\": \"texto humano y amigable\"\n}\n\nContenido:\n{{ $json.mensaje }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1792,
+        320
+      ],
+      "id": "21b51a31-0920-4ee1-b297-5cf8e847adfc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "enviar",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        320
+      ],
+      "id": "55de1b7f-bbed-4906-8362-b6c440b72e39",
+      "name": "Webhook",
+      "webhookId": "5493076e-65c8-48c7-9139-2311dcee9db3",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $binary.media.mimeType}}",
+                    "rightValue": "image/",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "517159b1-0bde-4e5f-9af3-e93a4a731b21"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b5789112-617b-4970-8dd8-15d0073224a6",
+                    "leftValue": "={{ $binary.media.mimeType}}",
+                    "rightValue": "audio/",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        224
+      ],
+      "id": "890d7973-efac-4aba-8598-f54039361611",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "body.conversacion.imagen",
+        "binaryPropertyName": "media",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        -80
+      ],
+      "id": "67b6d698-8c0e-4791-bcb9-abad4910557c",
+      "name": "Convert to img"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b9dd2c85-671d-48a4-847f-65672683497f",
+              "leftValue": "={{ $json.body.conversacion.imagen }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1d5faeb3-0e19-4fce-b4bf-b487535d8a51",
+              "leftValue": "={{ $json.body.conversacion.audio }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        320
+      ],
+      "id": "87736006-740a-4b59-bd21-7ec0e2e9d072",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.conversacion.imagen }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "2f7e20db-6ee5-4f54-b339-70e9e5f454d5"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b939576b-fb3f-4a5a-9ee8-e6aa890efd26",
+                    "leftValue": "={{ $json.body.conversacion.audio }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "c95df126-9087-4ef5-b2d3-1db861c37094",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "adf7abdb-c3ab-4e6d-881d-700a95b85e97",
+              "leftValue": "={{ $binary.media}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        320
+      ],
+      "id": "3e2a8991-2010-4d1d-a110-303b458ded29",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "=body.conversacion.audio",
+        "binaryPropertyName": "media",
+        "options": {
+          "mimeType": "audio/mp3"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        112
+      ],
+      "id": "8bf2c637-f1b2-4b99-b230-0bb099a01c03",
+      "name": "Convert to audio"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        224,
+        192
+      ],
+      "id": "ccd7049f-ccc3-4869-9dfd-2a871634d5fa",
+      "name": "Merge img/aud - dto"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "46b7ed54-c036-403a-a79a-ea3e2fe6e704",
+              "name": "body.conversacion.imagen",
+              "value": "=null",
+              "type": "string"
+            },
+            {
+              "id": "2a8f9850-8d09-4e0e-9eae-7496fe2a7d7c",
+              "name": "body.conversacion.audio",
+              "value": "=null",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        192
+      ],
+      "id": "09504bce-2ca0-4791-8c9e-abd321230034",
+      "name": "Normalizar"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://192.168.1.176:8080/api/v1/resqbotCliente/callback",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "mensaje",
+              "value": "={{ $('AI Agent').item.json.output }}"
+            },
+            {
+              "name": "numchat",
+              "value": "={{ $('Webhook').item.json.body.conversacion.numchat }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2816,
+        320
+      ],
+      "id": "c0640fa3-71a0-4edd-b0e6-9ef64a084f6a",
+      "name": "HTTP Request",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "440dc7fd-5fcf-4543-a824-31ee27c0b1b5",
+              "name": "texto",
+              "value": "={{ $json.body.conversacion.msgent }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        432
+      ],
+      "id": "d45c77fe-74e5-4115-8fbb-26572239b28e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw =\n  $input.first().json.message?.text ||\n  $input.first().json.output ||\n  $input.first().json.text ||\n  \"\";\n\nlet prioridad = null;\nlet mensaje = \"\";\n\ntry {\n\n  // Convertir string JSON a objeto\n  const parsed = JSON.parse(raw);\n\n  prioridad = parsed.prioridad ?? null;\n  mensaje = parsed.mensaje ?? \"\";\n\n} catch (e) {\n\n  // Fallback por si el modelo devuelve texto raro\n  mensaje = raw;\n\n  const match = raw.match(/\\d+/);\n  if (match) {\n    prioridad = parseInt(match[0]);\n  }\n}\n\nreturn [{\n  json: {\n    respuesta: mensaje,\n    prioridad: prioridad\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        320
+      ],
+      "id": "e467f63a-bede-48cc-898a-387f51afdef9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69ab16ab-0cea-4704-bd62-6575ef57a658",
+              "name": "mensaje",
+              "value": "={{ $json.texto }}",
+              "type": "string"
+            },
+            {
+              "id": "2c861384-474a-4ca4-bf10-fb8f5905b51e",
+              "name": "chat_id",
+              "value": "={{ $('If1').item.json.body.conversacion.numchat }}",
+              "type": "number"
+            },
+            {
+              "id": "3c9eb49a-77d8-4d6d-abbb-64cc855b8d21",
+              "name": "numpaci",
+              "value": "={{ $('If1').item.json.body.conversacion.numpaci }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        320
+      ],
+      "id": "dca33616-70fc-4b5b-94ee-e01ab3cb8ce4",
+      "name": "Mapeo Datos1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dd2bf4a5-c6ab-4304-a08e-8f79d57c799c",
+              "name": "numpaci",
+              "value": "={{ $('Mapeo Datos1').item.json.numpaci }}",
+              "type": "string"
+            },
+            {
+              "id": "a03b4e98-2d45-4122-b218-4d92dcae4cee",
+              "name": "priorid",
+              "value": "={{ $json.prioridad }}",
+              "type": "string"
+            },
+            {
+              "id": "18215585-33bd-4efa-931c-d42b0e386b84",
+              "name": "msgent",
+              "value": "={{ $('Mapeo Datos1').item.json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "5384408f-234c-41ec-b1d4-0a55c6a041a8",
+              "name": "respuesta",
+              "value": "={{ $json.respuesta }}",
+              "type": "string"
+            },
+            {
+              "id": "50f36d35-b41e-44be-80b8-a529015ab171",
+              "name": "numchat",
+              "value": "={{ $('Mapeo Datos1').item.json.chat_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2368,
+        320
+      ],
+      "id": "900fbbb0-0553-4e68-a494-6ce6f746d5c5",
+      "name": "mapeo"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b531baa-ee75-497b-882e-2fba5e41c262",
+              "name": "texto",
+              "value": "={{ $json['0'].content[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "bf734ac9-954f-4c82-ae15-700d769bf031",
+              "name": "result.file_id",
+              "value": "={{ $json['0'].id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        48
+      ],
+      "id": "9a4bb736-3661-404d-bb69-ed1834529009",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "conversacion",
+          "mode": "list",
+          "cachedResultName": "conversacion"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "alerta": false
+          },
+          "matchingColumns": [
+            "numchat"
+          ],
+          "schema": [
+            {
+              "id": "numchat",
+              "displayName": "numchat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "numpaci",
+              "displayName": "numpaci",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "msgent",
+              "displayName": "msgent",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tsent",
+              "displayName": "tsent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tssal",
+              "displayName": "tssal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "alerta",
+              "displayName": "alerta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "priorid",
+              "displayName": "priorid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "imagen",
+              "displayName": "imagen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "audio",
+              "displayName": "audio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "respuesta",
+              "displayName": "respuesta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2592,
+        320
+      ],
+      "id": "941a09df-344e-4979-ab92-443b6a2c30e6",
+      "name": "Update rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "RXmL4LcIlqEbj2Vx",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ef7af938-daf5-4474-9445-e082defe528d",
+              "name": "texto",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        240
+      ],
+      "id": "8b34349e-13b7-410b-8a9a-d44cc7d6f923",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "text": "describeme la imagen",
+        "inputType": "base64",
+        "binaryPropertyName": "media",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        48
+      ],
+      "id": "6ada313c-f44a-4be6-9981-3edf66302c47",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "M4npW54J1jRkXG4r",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "media",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        240
+      ],
+      "id": "dd7a47bd-2ff6-40f8-8755-cc5c33891419",
+      "name": "Transcribe a recording1",
+      "credentials": {
+        "openAiApi": {
+          "id": "M4npW54J1jRkXG4r",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Mapeo Datos1').item.json.numpaci }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1936,
+        544
+      ],
+      "id": "bcb82793-4c7e-4815-83cd-3bcaa852198a",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to img": {
+      "main": [
+        [
+          {
+            "node": "Merge img/aud - dto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge img/aud - dto",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Convert to img",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to audio": {
+      "main": [
+        [
+          {
+            "node": "Merge img/aud - dto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge img/aud - dto": {
+      "main": [
+        [
+          {
+            "node": "Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Mapeo Datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "mapeo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo Datos1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mapeo": {
+      "main": [
+        [
+          {
+            "node": "Update rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Mapeo Datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update rows in a table": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Mapeo Datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Transcribe a recording1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "500df2c4-20d7-4109-892e-8d4f22442e39",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cadbfcee7364db7bcc35b327aca1d3df7b318c7eb5d1a58d933ca63f48892d22"
+  },
+  "id": "zu2uYFmEMbaiNAB5",
+  "tags": []
+}
